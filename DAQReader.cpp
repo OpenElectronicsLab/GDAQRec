@@ -8,6 +8,8 @@
 #elif defined(USE_COMEDI)
 #include <unistd.h>
 #include <comedilib.h>
+#elif defined(USE_COMMANDLINE_DAQ)
+#include <unistd.h>
 #else
 #error No DAQ library was defined!
 #endif
@@ -341,3 +343,35 @@ bool DAQReader::DAQCheckHandler(const char* cmd, int error)
 }
 
 #endif
+
+#ifdef USE_COMMANDLINE_DAQ
+
+void DAQReader::run()
+{
+    int count = 0;
+    emit startedRecording();
+
+    while (!shouldStop) {
+        // read data with blocking call
+        usleep(2000);
+        ++count;
+        {
+            QMutexLocker lock(&mutex);
+
+            for (int chan = 0; chan < numChannels; ++chan) {
+                newDataBuffer[chan].push_back(count % (chan + 2));
+            }
+        }
+
+        emit newData();
+    }
+
+    emit stoppedRecording();
+}
+
+bool DAQReader::DAQCheckHandler(const char* cmd, int error)
+{
+    return true;
+}
+
+#endif // ifdef USE_COMMANDLINE_DAQ

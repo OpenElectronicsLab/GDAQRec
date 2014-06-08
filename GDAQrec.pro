@@ -32,6 +32,10 @@ unix:!macx {
 		LIBS += -lcomedi
 		DEFINES += USE_COMEDI
 	}
+
+	contains(DAQLIB, commandline) {
+		DEFINES += USE_COMMANDLINE_DAQ
+	}
 }
 
 macx {
