@@ -10,6 +10,8 @@
 #include <comedilib.h>
 #elif defined(USE_COMMANDLINE_DAQ)
 #include <unistd.h>
+#define LINE_BUF_LEN 4096
+#define VAL_BUF_LEN 100
 #else
 #error No DAQ library was defined!
 #endif
@@ -349,21 +351,43 @@ bool DAQReader::DAQCheckHandler(const char* cmd, int error)
 void DAQReader::run()
 {
     int count = 0;
+    size_t next = 0;
+    char line_buf[LINE_BUF_LEN];
+    char val_buf[VAL_BUF_LEN];
+    double d;
+
     emit startedRecording();
 
-    while (!shouldStop) {
-        // read data with blocking call
-        usleep(2000);
+    char *cmd = "ERROR=0; while [ $ERROR -eq 0 ]; do sleep 1; date '+%s' || ERROR=1; done";
+
+    FILE *pipe = popen(cmd, "r");
+
+    if (!pipe) {
+        emit daqError(QString("Could not open pipe.\n"));
+        return;
+    }
+
+    while ((!shouldStop) && (fgets(line_buf, LINE_BUF_LEN, pipe) != NULL)) {
         ++count;
         {
             QMutexLocker lock(&mutex);
 
             for (int chan = 0; chan < numChannels; ++chan) {
-                newDataBuffer[chan].push_back(count % (chan + 2));
+                char *in = line_buf + next;
+                size_t in_len = LINE_BUF_LEN - next;
+                next = lex_csv(in, in_len, val_buf, VAL_BUF_LEN);
+                sscanf(val_buf, "%lf%*s", &d);
+                d = (chan / 2) + (((int)d) % 3) + (d / 1000000000);
+                newDataBuffer[chan].push_back(d);
             }
         }
 
         emit newData();
+    }
+
+    if (pclose(pipe) != 0) {
+        // weird, but not really fatal
+        emit daqError(QString("Could not close pipe.\n"));
     }
 
     emit stoppedRecording();
@@ -372,6 +396,45 @@ void DAQReader::run()
 bool DAQReader::DAQCheckHandler(const char* cmd, int error)
 {
     return true;
+}
+
+size_t DAQReader::lex_csv(char *in, size_t in_len, char *out, size_t out_len)
+{
+    size_t len = 0;
+    size_t data_len = 0;
+    size_t end_pos = 0;
+    unsigned char delimiter_found = 0;
+    char *c;
+
+    while (!delimiter_found && len < in_len) {
+        c = (in + len++);
+        switch (*c) {
+        case '\0':
+        case '\n':
+        case ',':
+            {
+                delimiter_found = 1;
+            }
+        default:
+            break;
+        }
+    }
+    if (len > out_len) {
+        // truncate the result
+        data_len = out_len;
+    } else {
+        data_len = len;
+    }
+    strncpy(out, in, data_len);
+
+    // over-write the trailing delimiter with \0
+    end_pos = data_len - 1;
+    if (!delimiter_found || !data_len) {
+        end_pos = data_len;
+    }
+    out[end_pos] = '\0';
+
+    return len;
 }
 
 #endif // ifdef USE_COMMANDLINE_DAQ

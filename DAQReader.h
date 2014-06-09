@@ -40,6 +40,10 @@ class DAQReader : public QThread
 
         QVector<qreal> newDataBuffer[maxChannels];
         QMutex mutex;
+
+#if defined(USE_COMMANDLINE_DAQ)
+        size_t lex_csv(char *in, size_t in_len, char *out, size_t out_len);
+#endif
 };
 
 #endif
