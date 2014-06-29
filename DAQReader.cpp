@@ -390,6 +390,7 @@ void DAQReader::run()
         emit daqError(QString("Could not close pipe.\n"));
     }
 
+    shouldStop = false;
     emit stoppedRecording();
 }
 
