@@ -79,8 +79,8 @@ void Plotter::clearPlot()
     zoomStack.clear();
 
     PlotSettings settings;
-    settings.minY = -10;
-    settings.maxY = 10;
+    settings.minY = -0.2;
+    settings.maxY = 0.2;
 
     zoomStack.append(settings);
     zoomStack.append(settings); // start zoomed in, since the top zoom shows the entire waveform

@@ -378,7 +378,6 @@ void DAQReader::run()
                 size_t in_len = LINE_BUF_LEN - next;
                 next = lex_csv(in, in_len, val_buf, VAL_BUF_LEN);
                 sscanf(val_buf, "%lf%*s", &d);
-                d = (chan / 2) + (((int)d) % 3) + (d / 1000000000);
                 newDataBuffer[chan].push_back(d);
             }
         }

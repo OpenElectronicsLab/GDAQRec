@@ -31,10 +31,10 @@ void DAQSettings::restore()
    QSettings settings("OpenElectronicsLab", "GDAQrec");
 
    cmdLine = settings.value("cmdLine",
-        "ERROR=0; while [ $ERROR -eq 0 ]; do sleep 1; date '+%s' || ERROR=1; done"
-        ).toString();
-   numChannels = settings.value("numChannels", 2).toInt();
-   samplingRate = settings.value("samplingRate", 100).toInt();
+      "../eeg-mouse/src/serial-reader.pl | ../eeg-mouse/src/frame-parser.pl | cut -d',' -f8-"
+      ).toString();
+   numChannels = settings.value("numChannels", 8).toInt();
+   samplingRate = settings.value("samplingRate", 250).toInt();
    bgColor = settings.value("bgColor", Qt::black).value<QColor>();
    fgColor = settings.value("fgColor", Qt::white).value<QColor>();
 
@@ -45,9 +45,9 @@ void DAQSettings::restore()
 
    for (int i = 0; i < maxChannels; ++i) {
       maxVoltage[i] = settings.value(
-            QString("maxVoltage") + QString::number(i+1), 10.0).toDouble();
+            QString("maxVoltage") + QString::number(i+1), 0.2).toDouble();
       minVoltage[i] = settings.value(
-            QString("minVoltage") + QString::number(i+1), -10.0).toDouble();
+            QString("minVoltage") + QString::number(i+1), -0.2).toDouble();
       color[i] = settings.value(
             QString("color") + QString::number(i+1), 
             defaultColors[i]).value<QColor>();
