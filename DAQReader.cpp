@@ -394,7 +394,7 @@ void DAQReader::run()
     emit stoppedRecording();
 }
 
-bool DAQReader::DAQCheckHandler(const char* cmd, int error)
+bool DAQReader::DAQCheckHandler(const char* /*cmd*/, int /*error*/)
 {
     return true;
 }
