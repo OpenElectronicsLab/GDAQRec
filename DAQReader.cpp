@@ -353,41 +353,35 @@ bool DAQReader::DAQCheckHandler(const char* cmd, int error)
 
 void DAQReader::run()
 {
-    int count = 0;
-    size_t next = 0;
-    char line_buf[LINE_BUF_LEN];
-    char val_buf[VAL_BUF_LEN];
-    double d;
+    QString line;
 
     emit startedRecording();
 
-    FILE *pipe = popen(cmdLine.toUtf8(), "r");
+    QProcess proc;
 
-    if (!pipe) {
-        emit daqError(QString("Could not open pipe.\n"));
-        return;
-    }
+    proc.start(cmdLine);
+    proc.waitForStarted();
 
-    while ((!shouldStop) && (fgets(line_buf, LINE_BUF_LEN, pipe) != NULL)) {
-        ++count;
+    while ((!shouldStop) && proc.state() != QProcess::NotRunning) {
+        proc.waitForReadyRead();
         {
             QMutexLocker lock(&mutex);
 
-            for (int chan = 0; chan < numChannels; ++chan) {
-                char *in = line_buf + next;
-                size_t in_len = LINE_BUF_LEN - next;
-                next = lex_csv(in, in_len, val_buf, VAL_BUF_LEN);
-                sscanf(val_buf, "%lf%*s", &d);
-                newDataBuffer[chan].push_back(d);
+            while (proc.canReadLine()) {
+                line = proc.readLine(1000);
+                QStringList columns = line.split(',');
+                for (int chan = 0; chan < std::min(numChannels,columns.size()); ++chan) {
+                    newDataBuffer[chan].push_back(columns[chan].toDouble());
+                }
             }
         }
 
         emit newData();
     }
 
-    if (pclose(pipe) != 0) {
-        // weird, but not really fatal
-        emit daqError(QString("Could not close pipe.\n"));
+    proc.terminate();
+    if (!proc.waitForFinished(2000)) {
+        proc.kill();
     }
 
     shouldStop = false;
@@ -397,45 +391,6 @@ void DAQReader::run()
 bool DAQReader::DAQCheckHandler(const char* /*cmd*/, int /*error*/)
 {
     return true;
-}
-
-size_t DAQReader::lex_csv(char *in, size_t in_len, char *out, size_t out_len)
-{
-    size_t len = 0;
-    size_t data_len = 0;
-    size_t end_pos = 0;
-    unsigned char delimiter_found = 0;
-    char *c;
-
-    while (!delimiter_found && len < in_len) {
-        c = (in + len++);
-        switch (*c) {
-        case '\0':
-        case '\n':
-        case ',':
-            {
-                delimiter_found = 1;
-            }
-        default:
-            break;
-        }
-    }
-    if (len > out_len) {
-        // truncate the result
-        data_len = out_len;
-    } else {
-        data_len = len;
-    }
-    strncpy(out, in, data_len);
-
-    // over-write the trailing delimiter with \0
-    end_pos = data_len - 1;
-    if (!delimiter_found || !data_len) {
-        end_pos = data_len;
-    }
-    out[end_pos] = '\0';
-
-    return len;
 }
 
 #endif // ifdef USE_COMMANDLINE_DAQ
