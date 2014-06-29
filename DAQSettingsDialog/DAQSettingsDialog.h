@@ -15,6 +15,7 @@ struct DAQSettings
    double maxVoltage[maxChannels];
    double minVoltage[maxChannels];
    QColor color[maxChannels];
+   QString cmdLine;
 
    DAQSettings();
    

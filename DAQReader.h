@@ -42,6 +42,7 @@ class DAQReader : public QThread
         QMutex mutex;
 
 #if defined(USE_COMMANDLINE_DAQ)
+        QString cmdLine;
         size_t lex_csv(char *in, size_t in_len, char *out, size_t out_len);
 #endif
 };

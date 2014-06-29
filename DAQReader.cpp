@@ -39,6 +39,9 @@ void DAQReader::updateDAQSettings(const DAQSettings& settings)
         Vmins[chan] = settings.minVoltage[chan];
         Vmaxes[chan] = settings.maxVoltage[chan];
     }
+#if defined(USE_COMMANDLINE_DAQ)
+    cmdLine = settings.cmdLine;
+#endif
 }
 
 
@@ -358,9 +361,7 @@ void DAQReader::run()
 
     emit startedRecording();
 
-    char *cmd = "ERROR=0; while [ $ERROR -eq 0 ]; do sleep 1; date '+%s' || ERROR=1; done";
-
-    FILE *pipe = popen(cmd, "r");
+    FILE *pipe = popen(cmdLine.toUtf8(), "r");
 
     if (!pipe) {
         emit daqError(QString("Could not open pipe.\n"));

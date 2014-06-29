@@ -8,8 +8,9 @@ DAQSettings::DAQSettings()
 
 void DAQSettings::save() 
 {
-   QSettings settings("Chiel Lab", "GDAQrec");
+   QSettings settings("OpenElectronicsLab", "GDAQrec");
 
+   settings.setValue("cmdLine", cmdLine);
    settings.setValue("numChannels", numChannels);
    settings.setValue("samplingRate", samplingRate);
    settings.setValue("bgColor", bgColor);
@@ -27,8 +28,11 @@ void DAQSettings::save()
 
 void DAQSettings::restore() 
 {
-   QSettings settings("Chiel Lab", "GDAQrec");
+   QSettings settings("OpenElectronicsLab", "GDAQrec");
 
+   cmdLine = settings.value("cmdLine",
+        "ERROR=0; while [ $ERROR -eq 0 ]; do sleep 1; date '+%s' || ERROR=1; done"
+        ).toString();
    numChannels = settings.value("numChannels", 2).toInt();
    samplingRate = settings.value("samplingRate", 100).toInt();
    bgColor = settings.value("bgColor", Qt::black).value<QColor>();
@@ -57,6 +61,12 @@ DAQSettingsDialog::DAQSettingsDialog(const DAQSettings& settings_,
    setupUi(this);
    settings = settings_;
 
+#ifdef USE_COMMANDLINE_DAQ
+   cmdLine->setText(settings.cmdLine);
+#else
+   labelCmdLine->setHidden(true);
+   cmdLine->setHidden(true);
+#endif // ifdef USE_COMMANDLINE_DAQ
    numChannels->setValue(settings.numChannels);
    samplingRate->setText(QString::number(settings.samplingRate));
    maxV1->setText(QString::number(settings.maxVoltage[0],'f',2));
@@ -109,6 +119,8 @@ DAQSettingsDialog::DAQSettingsDialog(const DAQSettings& settings_,
    connect(color7, SIGNAL(clicked()), this, SLOT(color7Clicked()));
    connect(color8, SIGNAL(clicked()), this, SLOT(color8Clicked()));
 
+   connect(cmdLine, SIGNAL(textChanged(const QString&)), this, 
+         SLOT(textChanged()));
    connect(numChannels, SIGNAL(valueChanged(int)), this, 
          SLOT(numChannelsChanged(int)));
    connect(samplingRate, SIGNAL(textChanged(const QString&)), this, 
@@ -253,6 +265,7 @@ void DAQSettingsDialog::textChanged()
          && maxV7->hasAcceptableInput()
          && maxV8->hasAcceptableInput();
 
+   settings.cmdLine = cmdLine->text();
    if (valid) 
    {
       int newSamplingRate = samplingRate->text().toInt();  
