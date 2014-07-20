@@ -45,10 +45,9 @@ void DAQReader::updateDAQSettings(const DAQSettings& settings)
 }
 
 
-int DAQReader::appendData(QMap<int, QVector<QPointF> >* curveMap)
+void DAQReader::appendData(QMap<int, QVector<QPointF> >* curveMap)
 {
     QMutexLocker lock(&mutex);
-    int numScans = newDataBuffer[0].count();
 
     double tStart = ((*curveMap)[0].isEmpty()
             ? 0.0 : ((*curveMap)[0].last().x() + dt));
@@ -66,8 +65,6 @@ int DAQReader::appendData(QMap<int, QVector<QPointF> >* curveMap)
 
         newDataBuffer[chan].clear();
     }
-
-    return numScans;
 }
 
 

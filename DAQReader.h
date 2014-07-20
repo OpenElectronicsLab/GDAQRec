@@ -14,7 +14,7 @@ class DAQReader : public QThread
 
     public:
         DAQReader();
-        int appendData(QMap<int, QVector<QPointF> >* curveMap);
+        void appendData(QMap<int, QVector<QPointF> >* curveMap);
         void stop();
 
     signals:
