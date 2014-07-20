@@ -10,6 +10,7 @@
 #include <QDateTime>
 #include <QFile>
 #include "DAQReader.h"
+#include "QuadFilter.h"
 
 class QToolButton;
 class PlotSettings;
@@ -74,6 +75,8 @@ class Plotter : public QWidget
         QToolButton *zoomOutButton;
         typedef QMap<int, QVector<QPointF> > CurveMap;
         CurveMap curveMap;
+        typedef QMap<int, QVector<QuadFilter> > FilterMap;
+        FilterMap filterMap;
         CurveMap filteredCurveMap;
         QVector<PlotSettings> zoomStack;
         int curZoom;

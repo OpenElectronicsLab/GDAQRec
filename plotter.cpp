@@ -241,6 +241,7 @@ void Plotter::toggleRecording()
             filename.clear();
             curveMap.clear();
             filteredCurveMap.clear();
+            filterMap.clear();
             clearPlot();
             fileSamplingRate = daqSettings.samplingRate;
             recordButton->setEnabled(true);
@@ -270,7 +271,7 @@ void Plotter::toggleRecording()
                     saved = true;
                     filename = newFilename;
                     curveMap.clear();
-                    filteredCurveMap.clear();
+                    filterMap.clear();
                     recordButton->setDisabled(true);
                     settingsButton->setDisabled(true);
 
@@ -674,34 +675,35 @@ void Plotter::toggleRecording()
     }
 
     void Plotter::updateFilteredData() {
-        double bandpass_high = 45.0;
-        double bandpass_low = 1.0;
-
-        double a = tan(M_PI * bandpass_high * (1.0/fileSamplingRate));
-        double b = tan(M_PI * bandpass_low * (1.0/fileSamplingRate));
-        double C0 = -b/((1+a)*(1+b));
-        double C1 = 0;
-        double C2 = -C0;
-        double D0 = (2 - 2*a*b)/((1+a)*(1+b));
-        double D1 = -((1-a)*(1-b))/((1+a)*(1+b));
+        double bandpass_max = 45.0;
+        double bandpass_min = 1.0;
+        double bandpass_poles = 6;
 
         for (CurveMap::iterator chanIter = curveMap.begin();
                 chanIter != curveMap.end(); ++chanIter) {
             QVector<QPointF>& rawCurve = chanIter.value();
             QVector<QPointF>& filteredCurve = filteredCurveMap[chanIter.key()];
+            QVector<QuadFilter>& filters = filterMap[chanIter.key()];
+
+            // initialize the filters if needed
+            if (filters.size() == 0) {
+                for (int i = 0; i < bandpass_poles; ++i) {
+                    filters.push_back(QuadFilter::CreateBandpass(
+                        bandpass_min, bandpass_max, fileSamplingRate,
+                        rawCurve.first().y()));
+                }
+            }
+
             while (rawCurve.size() > filteredCurve.size()) {
-               int nowIndex = filteredCurve.size();
-               double rawY_0 = rawCurve[nowIndex].y();
-               double rawY_1 = nowIndex > 0 ? rawCurve[nowIndex-1].y() : rawY_0;
-               double rawY_2 = nowIndex > 1 ? rawCurve[nowIndex-2].y() : rawY_1;
+                int nowIndex = filteredCurve.size();
+                double result = rawCurve[nowIndex].y();
 
-               double filtY_1 = nowIndex > 0 ? filteredCurve[nowIndex-1].y() : 0;
-               double filtY_2 = nowIndex > 1 ? filteredCurve[nowIndex-2].y() : filtY_1;
+                for (int i = 0; i < bandpass_poles; ++i) {
+                    result = filters[i].filterInput(result);
+                }
 
-               double filtY_0 = C0 * rawY_0 + C1 * rawY_1 + C2 * rawY_2 + D0 * filtY_1 + D1 * filtY_2;
-
-               QPointF filteredPoint = QPointF(rawCurve[nowIndex].x(), filtY_0);
-               filteredCurve.push_back(filteredPoint);
+                QPointF filteredPoint = QPointF(rawCurve[nowIndex].x(), result);
+                filteredCurve.push_back(filteredPoint);
             }
         }
     }
