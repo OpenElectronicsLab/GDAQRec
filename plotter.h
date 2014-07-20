@@ -24,8 +24,8 @@ class Plotter : public QWidget
         QSize minimumSizeHint() const;
         QSize sizeHint() const;
 
-        public slots:
-            void zoomIn();
+    public slots:
+        void zoomIn();
         void zoomOut();
         void toggleRecording();
         void newData();
@@ -52,6 +52,7 @@ class Plotter : public QWidget
         bool offerToSave();
         void clearPlot();
         void updateRubberBandRegion();
+        void updateFilteredData();
         void refreshPixmap();
         void drawGrid(QPainter *painter);
         void drawCurves(QPainter *painter);
@@ -61,7 +62,7 @@ class Plotter : public QWidget
 
         DAQSettings daqSettings;
 
-	double fileSamplingRate;
+        double fileSamplingRate;
 
         QToolButton *newButton;
         QToolButton *openButton;
