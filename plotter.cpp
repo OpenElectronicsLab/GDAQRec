@@ -167,7 +167,6 @@ void Plotter::stoppedRecording()
 {
     recordButton->setIcon(QIcon(":/images/record.png"));
     recordButton->setEnabled(true);
-    settingsButton->setEnabled(true);
 
     // delete the shared recording timestamp
     sharedTimestamp.unmap(sharedTimestampMemMap);
@@ -241,6 +240,8 @@ void Plotter::toggleRecording()
             curveMap.clear();
             clearPlot();
         }
+
+        settingsButton->setEnabled(true);
     }
 
     void Plotter::open()
@@ -264,6 +265,7 @@ void Plotter::toggleRecording()
                     saved = true;
                     filename = newFilename;
                     curveMap.clear();
+		    settingsButton->setDisabled(true);
 
                     QTextStream in(&file);
 
@@ -278,6 +280,7 @@ void Plotter::toggleRecording()
                                 curveMap[i-1].append(QPointF(time, coords[i].toDouble()));
                             }
                         }
+			// TODO: extract sampling rate
                     }
 
                     clearPlot();
