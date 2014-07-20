@@ -38,6 +38,12 @@ Plotter::Plotter(QWidget *parent) :
     saveButton->adjustSize();
     connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
 
+    filteringButton = new QToolButton(this);
+    filteringButton->setText("Filtering");
+    filteringButton->adjustSize();
+    connect(filteringButton, SIGNAL(clicked()), this, SLOT(filtering()));
+    filteringButton->setCheckable(true);
+
     settingsButton = new QToolButton(this);
     settingsButton->setText("Settings");
     settingsButton->adjustSize();
@@ -339,6 +345,11 @@ void Plotter::toggleRecording()
         }
     }
 
+    void Plotter::filtering()
+    {
+        refreshPixmap();
+    }
+
     class UpdateTimer
     {
         QTime timer;
@@ -366,7 +377,9 @@ void Plotter::toggleRecording()
         double oldMaxX = curveMap[0].empty()
             ? zoomStack[curZoom].maxX : curveMap[0].last().x();
 
-        int numScansRead = daqReader.appendData(&curveMap);
+        int chan0_samples = curveMap[0].size();
+        daqReader.appendData(&curveMap);
+        int numScansRead = curveMap[0].size() - chan0_samples;
 
         if (numScansRead > 0) {
             if (saved) {
@@ -400,8 +413,39 @@ void Plotter::toggleRecording()
             }
 
             // update the shared timestamp
-            qsnprintf((char*)sharedTimestampMemMap, sharedTimestampSize, 
+            qsnprintf((char*)sharedTimestampMemMap, sharedTimestampSize,
                     sharedTimestampFormat, curveMap[0].last().x());
+
+            double bandpass_high = 45.0;
+            double bandpass_low = 1.0;
+
+            double a = tan(M_PI * bandpass_high * (1.0/daqSettings.samplingRate));
+            double b = tan(M_PI * bandpass_low * (1.0/daqSettings.samplingRate));
+            double C0 = -((b)/((1+a)*(1+b)));
+            double C1 = 0;
+            double C2 = -C0;
+            double D0 = (2+(2*a*b))/((1+a)*(1+b));
+            double D1 = -(((1-a)*(1-b))/((1+a)*(1+b)));
+
+            for (CurveMap::iterator chanIter = curveMap.begin();
+                    chanIter != curveMap.end(); ++chanIter) {
+                QVector<QPointF>& rawCurve = chanIter.value();
+                QVector<QPointF>& filteredCurve = filteredCurveMap[chanIter.key()];
+                while (rawCurve.size() > filteredCurve.size()) {
+                   int nowIndex = filteredCurve.size();
+                   double rawY_0 = rawCurve[nowIndex].y();
+                   double rawY_1 = nowIndex > 0 ? rawCurve[nowIndex-1].y() : rawY_0;
+                   double rawY_2 = nowIndex > 1 ? rawCurve[nowIndex-2].y() : rawY_1;
+
+                   double filtY_1 = nowIndex > 0 ? filteredCurve[nowIndex].y() : 0;
+                   double filtY_2 = nowIndex > 1 ? filteredCurve[nowIndex].y() : filtY_1;
+
+                   double filtY_0 = C0 * rawY_0 + C1 * rawY_1 + C2 * rawY_2 + D0 * filtY_1 + D1 * filtY_2;
+
+                   QPointF filteredPoint = QPointF(rawCurve[nowIndex].x(), filtY_0);
+                   filteredCurve.push_back(filteredPoint);
+                }
+            }
 
             refreshPixmap();
         }
@@ -452,6 +496,7 @@ void Plotter::toggleRecording()
                 + openButton->width() + gap
                 + saveButton->width() + gap
                 + settingsButton->width() + gap
+                + filteringButton->width() + gap
                 + recordButton->width() + gap
                 + zoomInButton->width() + gap
                 + zoomOutButton->width() + gap);
@@ -464,6 +509,8 @@ void Plotter::toggleRecording()
         x += saveButton->width() + gap;
         settingsButton->move(x, gap);
         x += settingsButton->width() + gap;
+        filteringButton->move(x, gap);
+        x += filteringButton->width() + gap;
         recordButton->move(x, gap);
         x += recordButton->width() + gap;
         zoomInButton->move(x, gap);
@@ -678,7 +725,7 @@ void Plotter::toggleRecording()
 
         painter->setClipRect(rect.adjusted(+1, +1, -1, -1));
 
-        QMapIterator<int, QVector<QPointF> > i(curveMap);
+        QMapIterator<int, QVector<QPointF> > i(filteringButton->isChecked() ? filteredCurveMap : curveMap);
         double offset = 0.0;
         while (i.hasNext()) {
             i.next();

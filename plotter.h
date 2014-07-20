@@ -36,6 +36,7 @@ class Plotter : public QWidget
         void open();
         void save();
         void settings();
+        void filtering();
 
     protected:
         void paintEvent(QPaintEvent *event);
@@ -64,16 +65,18 @@ class Plotter : public QWidget
         QToolButton *openButton;
         QToolButton *saveButton;
         QToolButton *settingsButton;
+        QToolButton *filteringButton;
         QToolButton *recordButton;
         QToolButton *zoomInButton;
         QToolButton *zoomOutButton;
         typedef QMap<int, QVector<QPointF> > CurveMap;
         CurveMap curveMap;
+        CurveMap filteredCurveMap;
         QVector<PlotSettings> zoomStack;
         int curZoom;
         bool rubberBandIsShown;
         QRect rubberBandRect;
-        QPixmap pixmap;
+        QPixmap pixmap; // offscreen rendering buffer
         bool saved;
         QDateTime startTime;
         DAQReader daqReader;
