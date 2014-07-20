@@ -8,8 +8,8 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += plotter.h DAQReader.h
-SOURCES += main.cpp plotter.cpp DAQReader.cpp
+HEADERS += plotter.h DAQReader.h simple_stats.h
+SOURCES += main.cpp plotter.cpp DAQReader.cpp simple_stats.c
 RESOURCES += plotter.qrc
 
 # Input

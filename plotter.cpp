@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "plotter.h"
+#include "simple_stats.h"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ Plotter::Plotter(QWidget *parent) :
 {
     daqSettings.restore();
     daqReader.updateDAQSettings(daqSettings);
+    fileSamplingRate = daqSettings.samplingRate;
 
     setAutoFillBackground(true);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -239,6 +241,8 @@ void Plotter::toggleRecording()
             filename.clear();
             curveMap.clear();
             clearPlot();
+            fileSamplingRate = daqSettings.samplingRate;
+	    recordButton->setEnabled(true);
         }
 
         settingsButton->setEnabled(true);
@@ -265,9 +269,13 @@ void Plotter::toggleRecording()
                     saved = true;
                     filename = newFilename;
                     curveMap.clear();
-		    settingsButton->setDisabled(true);
+                    recordButton->setDisabled(true);
+                    settingsButton->setDisabled(true);
 
                     QTextStream in(&file);
+
+                    simple_stats_t stats;
+                    simple_stats_t_init(&stats);
 
                     while (!in.atEnd()) {
                         QString line = in.readLine();
@@ -276,12 +284,41 @@ void Plotter::toggleRecording()
                         // TODO: real error checking/recovery
                         if (coords.count() >= 2) {
                             double time = coords[0].toDouble();
+                            if (curveMap[0].size() > 0) {
+                                simple_stats_t_append_val(&stats, time - curveMap[0].last().x());
+                            }
                             for (int i=1; i < coords.size(); ++i) {
                                 curveMap[i-1].append(QPointF(time, coords[i].toDouble()));
                             }
                         }
-			// TODO: extract sampling rate
                     }
+                    char buf[100];
+                    simple_stats_t_to_string(&stats, buf, 100);
+                    qDebug() << "   time difference stats: " << buf;
+                    if (curveMap[0].size() < 2) {
+                        QMessageBox::critical(this, tr("GDAQrec"),
+                            tr("File must contain at least 2 data points."),
+                            QMessageBox::Ok | QMessageBox::Default
+                            );
+                        curveMap.clear();
+                    }
+                    double meanDelta = simple_stats_t_average(&stats);
+                    if (meanDelta < 0.0000000001 || meanDelta > 100000000) {
+                        QMessageBox::critical(this, tr("GDAQrec"),
+                            tr("Average time between samples (%1) is really weird.").arg(meanDelta),
+                            QMessageBox::Ok | QMessageBox::Default
+                            );
+                        curveMap.clear();
+                    }
+                    if (stats.min < (meanDelta * 0.9) || stats.max > (meanDelta * 1.1)) {
+                        QMessageBox::critical(this, tr("GDAQrec"),
+                            tr("Min and max times between samples must be within 10\% of average. (%1,%2,%3)").arg(stats.min).arg(stats.max).arg(meanDelta),
+                            QMessageBox::Ok | QMessageBox::Default
+                            );
+                        curveMap.clear();
+                    }
+                    fileSamplingRate = 1.0/meanDelta;
+                    qDebug() << "Sampling rate: " << fileSamplingRate;
 
                     clearPlot();
                 }
@@ -422,8 +459,8 @@ void Plotter::toggleRecording()
             double bandpass_high = 45.0;
             double bandpass_low = 1.0;
 
-            double a = tan(M_PI * bandpass_high * (1.0/daqSettings.samplingRate));
-            double b = tan(M_PI * bandpass_low * (1.0/daqSettings.samplingRate));
+            double a = tan(M_PI * bandpass_high * (1.0/fileSamplingRate));
+            double b = tan(M_PI * bandpass_low * (1.0/fileSamplingRate));
             double C0 = -((b)/((1+a)*(1+b)));
             double C1 = 0;
             double C2 = -C0;
@@ -805,6 +842,7 @@ void Plotter::toggleRecording()
     void Plotter::updateSettings()
     {
         daqReader.updateDAQSettings(daqSettings);
+	fileSamplingRate = daqSettings.samplingRate;
         refreshPixmap();
     }
 

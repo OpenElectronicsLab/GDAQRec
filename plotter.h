@@ -61,6 +61,8 @@ class Plotter : public QWidget
 
         DAQSettings daqSettings;
 
+	double fileSamplingRate;
+
         QToolButton *newButton;
         QToolButton *openButton;
         QToolButton *saveButton;
