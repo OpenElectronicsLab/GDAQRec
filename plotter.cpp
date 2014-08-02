@@ -675,9 +675,10 @@ void Plotter::toggleRecording()
     }
 
     void Plotter::updateFilteredData() {
-        double bandpass_max = 45.0;
-        double bandpass_min = 1.0;
-        double bandpass_poles = 6;
+        double lowpass_cutoff = 40.0;
+	unsigned lowpass_order = 4;
+        double highpass_cutoff = 0.1;
+	unsigned highpass_order = 4;
 
         for (CurveMap::iterator chanIter = curveMap.begin();
                 chanIter != curveMap.end(); ++chanIter) {
@@ -687,10 +688,15 @@ void Plotter::toggleRecording()
 
             // initialize the filters if needed
             if (filters.size() == 0) {
-                for (int i = 0; i < bandpass_poles; ++i) {
-                    filters.push_back(QuadFilter::CreateBandpass(
-                        bandpass_min, bandpass_max, fileSamplingRate,
+                for (unsigned int i = 0; i < lowpass_order/2; ++i) {
+                    filters.push_back(QuadFilter::CreateLowpass(
+                        lowpass_cutoff, lowpass_order, i, fileSamplingRate,
                         rawCurve.first().y()));
+                }
+                for (unsigned int i = 0; i < highpass_order/2; ++i) {
+                    filters.push_back(QuadFilter::CreateLowpass(
+                        highpass_cutoff, highpass_order, i, fileSamplingRate,
+                        ((i==0) ? rawCurve.first().y() : 0)));
                 }
             }
 
@@ -698,7 +704,7 @@ void Plotter::toggleRecording()
                 int nowIndex = filteredCurve.size();
                 double result = rawCurve[nowIndex].y();
 
-                for (int i = 0; i < bandpass_poles; ++i) {
+                for (int i = 0; i < filters.size(); ++i) {
                     result = filters[i].filterInput(result);
                 }
 

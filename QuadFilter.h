@@ -1,6 +1,7 @@
 #ifndef QUADFILTER_H
 #define QUADFILTER_H
 #include <math.h>
+#include <assert.h>
 
 // A quadratic IIR discrete time filter
 class QuadFilter {
@@ -28,6 +29,56 @@ public:
         filter.d_2 = -((1-a)*(1-b))/((1+a)*(1+b));
         filter.input_1 = filter.input_2 = input_start;
         filter.output_1 = filter.output_2 = 0;
+
+        return filter;
+    }
+
+    static QuadFilter CreateHighpass(double f_cutoff, unsigned int order,
+            unsigned int iteration, double f_sampling, double input_start) {
+        QuadFilter filter;
+
+	// we only support even orders at this time
+	// the way to support odd order filters might be chaining
+	// quadratic filters and a linear filter
+	assert(order % 2 == 0);
+
+        double a = tan(M_PI * f_cutoff * (1.0/f_sampling));
+	double alpha = (a*a);
+	double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
+	double denominator = 1 + alpha + gamma_j;
+
+        filter.c_0 = 1/denominator;
+        filter.c_1 = -2/denominator;
+        filter.c_2 = 1/denominator;
+        filter.c_1 = (2 - (2*alpha))/denominator;
+        filter.c_2 = (gamma_j - alpha - 1)/denominator;
+        filter.input_1 = filter.input_2 = input_start;
+        filter.output_1 = filter.output_2 = 0;
+
+        return filter;
+    }
+
+    static QuadFilter CreateLowpass(double f_cutoff, unsigned int order,
+            unsigned int iteration, double f_sampling, double input_start) {
+        QuadFilter filter;
+
+	// we only support even orders at this time
+	// the way to support odd order filters might be chaining
+	// quadratic filters and a linear filter
+	assert(order % 2 == 0);
+
+        double a = tan(M_PI * f_cutoff * (1.0/f_sampling));
+	double alpha = (a*a);
+	double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
+	double denominator = 1 + alpha + gamma_j;
+
+        filter.c_0 = -alpha/denominator;
+        filter.c_1 = -(2*alpha)/denominator;
+        filter.c_2 = -alpha/denominator;
+        filter.c_1 = (2 - (2*alpha))/denominator;
+        filter.c_2 = (gamma_j - alpha - 1)/denominator;
+        filter.input_1 = filter.input_2 = input_start;
+        filter.output_1 = filter.output_2 = input_start;
 
         return filter;
     }
