@@ -676,9 +676,9 @@ void Plotter::toggleRecording()
 
     void Plotter::updateFilteredData() {
         double lowpass_cutoff = 40.0;
-        unsigned lowpass_order = 8;
-        double highpass_cutoff = 0.1;
-        unsigned highpass_order = 8;
+        unsigned lowpass_order = 12;
+        double highpass_cutoff = 0.5;
+        unsigned highpass_order = 2;
 
         for (CurveMap::iterator chanIter = curveMap.begin();
                 chanIter != curveMap.end(); ++chanIter) {
