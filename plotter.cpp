@@ -676,9 +676,9 @@ void Plotter::toggleRecording()
 
     void Plotter::updateFilteredData() {
         double lowpass_cutoff = 40.0;
-        unsigned lowpass_order = 4;
+        unsigned lowpass_order = 8;
         double highpass_cutoff = 0.1;
-        unsigned highpass_order = 4;
+        unsigned highpass_order = 8;
 
         for (CurveMap::iterator chanIter = curveMap.begin();
                 chanIter != curveMap.end(); ++chanIter) {
@@ -688,15 +688,15 @@ void Plotter::toggleRecording()
 
             // initialize the filters if needed
             if (filters.size() == 0) {
+                for (unsigned int i = 0; i < highpass_order/2; ++i) {
+                    filters.push_back(QuadFilter::CreateHighpass(
+                        highpass_cutoff, highpass_order, i, fileSamplingRate,
+                        ((i==0) ? rawCurve.first().y() : 0)));
+                }
                 for (unsigned int i = 0; i < lowpass_order/2; ++i) {
                     filters.push_back(QuadFilter::CreateLowpass(
                         lowpass_cutoff, lowpass_order, i, fileSamplingRate,
-                        rawCurve.first().y()));
-                }
-                for (unsigned int i = 0; i < highpass_order/2; ++i) {
-                    filters.push_back(QuadFilter::CreateLowpass(
-                        highpass_cutoff, highpass_order, i, fileSamplingRate,
-                        ((i==0) ? rawCurve.first().y() : 0)));
+                        0));
                 }
             }
 
