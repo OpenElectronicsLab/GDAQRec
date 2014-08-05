@@ -37,15 +37,15 @@ public:
             unsigned int iteration, double f_sampling, double input_start) {
         QuadFilter filter;
 
-	// we only support even orders at this time
-	// the way to support odd order filters might be chaining
-	// quadratic filters and a linear filter
-	assert(order % 2 == 0);
+        // we only support even orders at this time
+        // the way to support odd order filters might be chaining
+        // quadratic filters and a linear filter
+        assert(order % 2 == 0);
 
         double a = tan(M_PI * f_cutoff * (1.0/f_sampling));
-	double alpha = (a*a);
-	double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
-	double denominator = 1 + alpha + gamma_j;
+        double alpha = (a*a);
+        double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
+        double denominator = 1 + alpha + gamma_j;
 
         filter.c_0 = 1/denominator;
         filter.c_1 = -2/denominator;
@@ -62,15 +62,15 @@ public:
             unsigned int iteration, double f_sampling, double input_start) {
         QuadFilter filter;
 
-	// we only support even orders at this time
-	// the way to support odd order filters might be chaining
-	// quadratic filters and a linear filter
-	assert(order % 2 == 0);
+        // we only support even orders at this time
+        // the way to support odd order filters might be chaining
+        // quadratic filters and a linear filter
+        assert(order % 2 == 0);
 
         double a = tan(M_PI * f_cutoff * (1.0/f_sampling));
-	double alpha = (a*a);
-	double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
-	double denominator = 1 + alpha + gamma_j;
+        double alpha = (a*a);
+        double gamma_j = 2 * a * sin(M_PI * (2+(2*iteration))/(2*order));
+        double denominator = 1 + alpha + gamma_j;
 
         filter.c_0 = -alpha/denominator;
         filter.c_1 = -(2*alpha)/denominator;
