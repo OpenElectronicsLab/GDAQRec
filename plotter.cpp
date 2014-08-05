@@ -865,7 +865,7 @@ void Plotter::toggleRecording()
     PlotSettings::PlotSettings()
     {
         minX = 0.0;
-        maxX = 2.0;
+        maxX = 10.0;
         numXTicks = 5;
 
         minY = -2.0;
