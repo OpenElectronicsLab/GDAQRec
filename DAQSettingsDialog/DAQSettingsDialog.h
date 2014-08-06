@@ -2,6 +2,7 @@
 #define DAQSETTINGSDIALOG_H 
 
 #include <QDialog>
+#include <QToolButton>
 #include <ui_DAQSettingsDialog.h>
 
 struct DAQSettings 

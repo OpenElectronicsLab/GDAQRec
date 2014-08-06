@@ -1,4 +1,5 @@
 #include <QtGui>
+#include <QColorDialog>
 #include "DAQSettingsDialog.h"
 
 DAQSettings::DAQSettings()
@@ -35,8 +36,8 @@ void DAQSettings::restore()
       ).toString();
    numChannels = settings.value("numChannels", 8).toInt();
    samplingRate = settings.value("samplingRate", 250).toInt();
-   bgColor = settings.value("bgColor", Qt::black).value<QColor>();
-   fgColor = settings.value("fgColor", Qt::white).value<QColor>();
+   bgColor = settings.value("bgColor", QColor(Qt::black)).value<QColor>();
+   fgColor = settings.value("fgColor", QColor(Qt::white)).value<QColor>();
 
    static const QColor defaultColors[8] = {
        Qt::yellow,   Qt::green,  Qt::white,     Qt::red, 

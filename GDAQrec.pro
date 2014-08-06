@@ -3,9 +3,12 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = 
+TARGET = GDAQrec
 DEPENDPATH += .
 INCLUDEPATH += .
+
+QT       += core gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # Input
 HEADERS += plotter.h DAQReader.h simple_stats.h QuadFilter.h

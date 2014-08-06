@@ -1,4 +1,7 @@
 #include <QtGui>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QStylePainter>
 #include <cmath>
 
 #include "plotter.h"
@@ -342,7 +345,7 @@ void Plotter::toggleRecording()
         }
 
         if (!filename.isEmpty()) {
-            FILE* file = fopen(filename.toAscii(), "w");
+            FILE* file = fopen(filename.toUtf8(), "w");
 
             if (file != NULL) {
                 int maxScans = curveMap[0].count()-1;
