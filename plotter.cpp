@@ -720,7 +720,6 @@ void Plotter::toggleRecording()
     void Plotter::refreshPixmap()
     {
         pixmap = QPixmap(size());
-        pixmap.fill(this, 0, 0);
         pixmap.fill(daqSettings.bgColor);
 
         QPainter painter(&pixmap);
