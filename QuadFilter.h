@@ -72,9 +72,9 @@ public:
         double gamma_j = 2 * a * sin(M_PI * (1+(2*iteration))/(2*order));
         double denominator = 1 + alpha + gamma_j;
 
-        filter.c_0 = -alpha/denominator;
-        filter.c_1 = -(2*alpha)/denominator;
-        filter.c_2 = -alpha/denominator;
+        filter.c_0 = alpha/denominator;
+        filter.c_1 = (2*alpha)/denominator;
+        filter.c_2 = alpha/denominator;
         filter.d_1 = (2 - (2*alpha))/denominator;
         filter.d_2 = (gamma_j - alpha - 1)/denominator;
         filter.input_1 = filter.input_2 = input_start;
