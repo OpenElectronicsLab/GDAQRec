@@ -34,13 +34,13 @@ void DAQSettings::restore()
    cmdLine = settings.value("cmdLine",
       "/bin/bash -c \"../eeg-mouse/src/serial-reader.pl | ../eeg-mouse/src/frame-parser.pl | cut -d',' -f8-\""
       ).toString();
-   numChannels = settings.value("numChannels", 8).toInt();
+   numChannels = settings.value("numChannels", 1).toInt();
    samplingRate = settings.value("samplingRate", 250).toInt();
    bgColor = settings.value("bgColor", QColor(Qt::black)).value<QColor>();
    fgColor = settings.value("fgColor", QColor(Qt::white)).value<QColor>();
 
    static const QColor defaultColors[8] = {
-       Qt::yellow,   Qt::green,  Qt::white,     Qt::red, 
+       Qt::green,    Qt::yellow, Qt::white,     Qt::red,
        Qt::blue,     Qt::cyan,   Qt::magenta,   Qt::darkGreen
     };
 
