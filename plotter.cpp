@@ -48,6 +48,7 @@ Plotter::Plotter(QWidget *parent) :
     filteringButton->adjustSize();
     connect(filteringButton, SIGNAL(clicked()), this, SLOT(filtering()));
     filteringButton->setCheckable(true);
+    filteringButton->setChecked(true);
 
     settingsButton = new QToolButton(this);
     settingsButton->setText("Settings");
@@ -90,11 +91,13 @@ void Plotter::clearPlot()
     zoomStack.clear();
 
     PlotSettings settings;
-    settings.minY = -0.2;
-    settings.maxY = 0.2;
 
     zoomStack.append(settings);
-    zoomStack.append(settings); // start zoomed in, since the top zoom shows the entire waveform
+
+    // start zoomed in, since the top zoom shows the entire waveform
+    settings.minY = -0.0015;
+    settings.maxY = 0.0015;
+    zoomStack.append(settings);
     curZoom = 1;
 
     // make the top level zoom as wide as the data
@@ -485,7 +488,7 @@ void Plotter::toggleRecording()
 
     QSize Plotter::sizeHint() const
     {
-        return QSize(12 * Margin, 8 * Margin);
+        return QSize(900, 600);
     }
 
     void Plotter::paintEvent(QPaintEvent * /* event */)
@@ -868,11 +871,11 @@ void Plotter::toggleRecording()
     {
         minX = 0.0;
         maxX = 10.0;
-        numXTicks = 5;
+        numXTicks = 10;
 
         minY = -2.0;
         maxY = 2.0;
-        numYTicks = 5;
+        numYTicks = 6;
 
         includesRightEdge = false;
     }
