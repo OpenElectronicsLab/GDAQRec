@@ -32,7 +32,7 @@ void DAQSettings::restore()
    QSettings settings("OpenElectronicsLab", "GDAQrec");
 
    cmdLine = settings.value("cmdLine",
-      "/bin/bash -c \"../eeg-mouse/src/serial-reader.pl | ../eeg-mouse/src/frame-parser.pl | cut -d',' -f8-\""
+      "/bin/bash -c \"../OpenHardwareExG/src/serial-reader.pl | ../OpenHardwareExG/src/frame-parser.pl | cut -d',' -f8-\""
       ).toString();
    numChannels = settings.value("numChannels", 1).toInt();
    samplingRate = settings.value("samplingRate", 250).toInt();
